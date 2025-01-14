@@ -89,8 +89,5 @@ O projeto **WebSocketNodeJs** implementa um servidor WebSocket desenvolvido em *
 3. **Persistência de Dados:**
    - Salvar mensagens em um banco de dados para recuperação futura.
 
-4. **Documentação do Código:**
-   - Adicionar comentários detalhados no código para melhor entendimento.
-
 
 
