@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cliente WebSocket</title>
+</head>
+<body>
+    <h1>Cliente WebSocket</h1>
+
+    <!-- Campo para definir o nome do cliente -->
+    <input type="text" id="nameInput" placeholder="Digite seu nome e pressione Enter" onkeydown="setName(event)" />
+
+    <!-- Campo para enviar mensagens -->
+    <input type="text" id="messageInput" placeholder="Digite uma mensagem" onkeydown="sendMessage(event)" />
+
+    <!-- Botão para solicitar arquivo do servidor -->
+    <button onclick="requestFile()">Solicitar Arquivo do Servidor</button>
+
+
+    <button onclick="requestMensage()">Solicitar mensagem do Servidor</button>
+
+    <!-- Seleção de comando alvo -->
+    <div>
+        <select id="targetSelect" onchange="updateTarget()">
+            <option value="/broadcast">broadcast</option>
+            <option value="/direct">direct</option>
+        </select>
+        <p>Selecione /broadcast para enviar uma mensagem a todos, e /direct para enviar a alguém específico</p>
+        <p>Para /direct, digite o nome do usuário e um espaço para iniciar a mensagem</p>
+    </div>
+
+    <!-- Campo de seleção de arquivo para enviar ao servidor -->
+    <input type="file" id="fileInput" onchange="sendFile()" />
+    <p>Selecione um arquivo para enviá-lo ao servidor</p>
+
+    <!-- Área de mensagens recebidas -->
+    <div id="messages"></div>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:1337');
+
+        let targetCommand = document.getElementById('targetSelect').value;
+
+        // Atualiza o comando alvo com base na seleção
+        function updateTarget() {
+            targetCommand = document.getElementById('targetSelect').value;
+        }
+
+        // Recebe mensagens do servidor
+        socket.onmessage = (event) => {
+            document.getElementById('messages').innerHTML += `<p>${event.data}</p>`;
+        };
+
+        // Define o nome do cliente
+        function setName(event) {
+            if (event.key === 'Enter') {
+                socket.send(`/name ${event.target.value}`);
+                event.target.value = '';
+            }
+        }
+
+        // Envia uma mensagem de transmissão ou direta
+        function sendMessage(event) {
+            if (event.key === 'Enter') {
+                socket.send(`${targetCommand} ${event.target.value}`);
+                event.target.value = '';
+            }
+        }
+
+        // Solicita um arquivo do servidor
+        function requestFile() {
+            socket.send('/getfile');
+        }
+
+        function requestMensage() {
+            socket.send('/getmessage')
+        }
+
+        // Função para enviar o arquivo ao servidor
+        function sendFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const base64File = event.target.result.split(',')[1]; // Obtém apenas a parte base64
+                    socket.send(`/sendfile ${base64File}`);
+                    document.getElementById('messages').innerHTML += `<p>Arquivo ${file.name} enviado ao servidor.</p>`;
+                };
+                reader.readAsDataURL(file); // Converte o arquivo para Base64
+            }
+        }
+    </script>
+</body>
+</html>
